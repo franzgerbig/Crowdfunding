@@ -12,16 +12,21 @@ import matplotlib.pyplot as plt # -> plt.show to plot the respective graph
 import seaborn as sns
 sns.set() # to change the theme
 
+# read data from downloaded file
 file=r"C:\Users\Franz.000\Documents\Berufliches\Weiterbildung\data analyst\data\kickstarter\kaggle\ks-projects-201801.csv"
 df=pd.read_csv(file)
 df.head(3)
 
-# general
-df.info()
+# general overview
+df.info() # 378661 projects
 
-# reduce to successful and failed projects, only
-df.state=df.state[(df.state=="successful")|(df.state=="failed")]
+# What categories does the success indicator "state" have?
 df.state.value_counts(normalize=True)
+
+# reduce to successful and failed projects, (finished projects) only
+df=df[(df.state=="successful")|(df.state=="failed")]
+len(df) # 331675 are relevant and retained
+df.state.value_counts(normalize=True) 
 
 # check for duplicates
 df.duplicated().sum() # 0
@@ -37,6 +42,10 @@ def get_year(x):
     return x.year
 df['launched_year']=df['launch'].apply(get_year)
 
+# webrobots data frame contained outliers before 2009 (launch of kickstarter platform)
+df.launched_year.value_counts() # outliers before 2009 already dropped with reduction to finished projects
+
+
 # derive duration of a campaign in different units
 from datetime import timedelta
 df['duration_s']=(df['dead']-df['launch'])/timedelta(seconds=1)
@@ -49,14 +58,16 @@ df.info()
 df.launched_year.value_counts() # outliers for 1970 must be dropped
 print(pd.crosstab(df.launched_year,df.state,normalize="index"))
 
-
-df.category.value_counts()
+# category
+df.category.value_counts()[:10]
 df.category.nunique() # 159 modalities
 # df[["goal","pledged","usd pledged","usd_pledged_real","usd_goal_real"]].describe()
 # plt.boxplot(df["goal"])
 # sns.relplot(x="goal",y="backers",data=df,kind="line")
 # sns.displot(df.goal,kde=True,bins=15)
 # # df["usd pledged"].value_counts()
+
+# main category
 pd.DataFrame(df.main_category.value_counts(normalize=True))
 
 
@@ -77,10 +88,7 @@ g.fig.suptitle("Development of funding goals by project (top 3 of main) category
 plt.show()
 
 
-# usd_pledged: conversion in US dollars of the pledged column (conversion done by kickstarter).
-# usd pledge real: conversion in US dollars of the pledged column (conversion from Fixer.io API).
-# usd goal real: conversion in US dollars of the goal column (conversion from Fixer.io API).
-
+# All the currency values are converted into appropriate amounts in USD as per the fx rate provided in the base dataset.
 # --> we should use the real columns for pledged and goal to be able to compare amounts across countries
 df[["usd pledged","usd_pledged_real"]].head(3)
 df[["usd pledged","usd_pledged_real"]].describe()

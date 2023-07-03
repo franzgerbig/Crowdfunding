@@ -54,22 +54,6 @@ X=df_final.drop("status",axis=1)
 y=df_final['status'].replace(['successful','failed'],[1,0]) # on the fly: assign numerical values to target categories
 X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=.3,random_state=0)
 
-# target data need to be one-dimensional in modeling
-# for s in [y_train,y_test]:
-#     s.reset_index(inplace=True)
-#     s.drop("id")
-# import numpy as np
-
-# [s.ravel() for s in [y_train,y_test]]
-
-# y_train.reset_index(inplace=True)    
-# y_test.reset_index(inplace=True)    
-# y_train.drop("id",axis=1)
-# y_test.drop("id",axis=1)
-y_train.head() # OK
-y_test.info() # OK
-
-
 
 ## standardization (since variables don't share same scale)
 # standardization

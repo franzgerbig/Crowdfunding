@@ -98,6 +98,8 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 from sklearn.metrics import mean_squared_error
 from datetime import datetime
+from datetime import timedelta
+from time import time
 
 # select and instantiate model types
 tree=DecisionTreeClassifier(random_state=0)
@@ -106,7 +108,7 @@ rfc=RandomForestClassifier(random_state=0)
 # prepare loop
 models =    [tree,rfc,log]
 models_=    ['tree','rfc','log']
-compare=pd.DataFrame({"id":models_,
+compare=pd.DataFrame({"model":models_,
     #                   "MSE_train":"",
     #                   "RMSE_train":"",
     #                   "MSE_test":"",
@@ -118,14 +120,13 @@ compare=pd.DataFrame({"id":models_,
 # start loop of Grid Search of best parameters
 for m,m_ in zip(models,models_):
     # GridSearch
-    print("\nStarting the grid search for best",m_,"model")
     start_time=datetime.now()
-    print("at:",start_time.strftime("%H:%M:%S"))
+    print("\nStarting the grid search for best",m_,"model","at:",start_time.strftime("%H:%M:%S"))
     
     # define model hyperparameters grid to search through for best combination
     if m_=='log':
         grid={'max_iter':range(100,201),
-              'solver':["lbfgs","liblinear"]}
+              'solver':["sag"]}
               # 'solver':["lbfgs","liblinear","newton-cg"]}
     else:
         grid={'max_depth':range(3,16),
@@ -145,16 +146,16 @@ for m,m_ in zip(models,models_):
     pred_train_name=gs_name.predict(X_train_merge)
     pred_test_name=gs_name.predict(X_test_merge)
     
-    # show best model
-    # compare errors (RMSE)
+    # compare errors
     # compare.loc[(compare['id']==m_),"MSE_train"]=mean_squared_error(y_train, pred_train_name)
     # compare.loc[(compare['id']==m_),"RMSE_train"]= np.sqrt(mean_squared_error(y_train,pred_train_name))
-    compare.loc[(compare['id']==m_),"MSE test"]=mean_squared_error(y_test,pred_test_name)
-    compare.loc[(compare['id']==m_),"RMSE test"]= np.sqrt(mean_squared_error(y_test,pred_test_name))
-    compare.loc[(compare['id']==m_),"Train score"]=gs_name.score(X_train_merge,y_train)
-    compare.loc[(compare['id']==m_),"Test score"]=gs_name.score(X_test_merge,y_test)
-    compare.loc[(compare['id']==m_),"Best params"]=str(gs_name.best_params_)
-
+    compare.loc[(compare['model']==m_),"MSE test"]=mean_squared_error(y_test,pred_test_name)
+    compare.loc[(compare['model']==m_),"RMSE test"]= np.sqrt(mean_squared_error(y_test,pred_test_name))
+    compare.loc[(compare['model']==m_),"Train score"]=gs_name.score(X_train_merge,y_train)
+    compare.loc[(compare['model']==m_),"Test score"]=gs_name.score(X_test_merge,y_test)
+    compare.loc[(compare['model']==m_),"Best params"]=str(gs_name.best_params_)
+    elapsed=(datetime.now()-start_time)/timedelta(seconds=1)
+    compare.loc[(compare['model']==m_),"Calculation time"]=elapsed
     # print("best parameters:\n",gs_name.best_params_)
     # print("train score:",gs_name.score(X_train_merge,y_train))
     # print("test score:",gs_name.score(X_test_merge,y_test))
@@ -163,12 +164,144 @@ for m,m_ in zip(models,models_):
     print(classification_report(y_test,pred_test_name))
         
     # How long did it take?
-    from time import time
-    from datetime import timedelta
-    elapsed=(datetime.now()-start_time)/timedelta(seconds=1)
     print("Best model parameters found after:",elapsed,"seconds")
 
 # show metrics comparison 
-compare.set_index("id",inplace=True)
-compare.T # Transpose, since (now) more columns than rows
+compare.set_index("model",inplace=True)
+compare
+# compare.T # Transpose?
     
+
+# ----------------------------------------------------------------------
+
+### next steps
+
+# backers_count as target
+# group backers?
+# and do multinomial logistic or alike?
+
+df_final.backers_count.value_counts()[:50] # a cut into 3 groups should be enough
+df_final.backers_count.describe()
+
+
+
+## Split
+# create new data split and new target
+from sklearn.model_selection import train_test_split
+# separate explanatory and target variable(s)
+X=df_final.drop("backers_count",axis=1)
+y=pd.qcut(df_final["backers_count"],3,labels=False) # on the fly: cut numerical target values into categories
+X_train,X_test,y_train_opt,y_test_opt=train_test_split(X,y,test_size=.3,random_state=0)
+
+
+## standardization (since variables don't share same scale)
+from sklearn.preprocessing import StandardScaler
+scaler=StandardScaler()
+# select variables to scale - date variables should not be scaled
+scale_list=['goal_usd']
+X_train[scale_list]=scaler.fit_transform(X_train[scale_list])
+X_test[scale_list]=scaler.transform(X_test[scale_list])
+X_train_scale=X_train[scale_list]
+X_test_scale=X_test[scale_list]
+
+
+## encodings
+# encode explanatory variables
+from sklearn.preprocessing import OneHotEncoder
+ohe=OneHotEncoder(sparse=False)
+cat_list=["currency","country","main_category","creator_projects","launched_day"]
+
+# encode train set
+ohe_train=ohe.fit_transform(X_train[cat_list])
+column_name=ohe.get_feature_names_out(cat_list)
+X_train_ohe=pd.DataFrame(ohe_train,columns=column_name,index=X_train.index)
+
+# encode test set
+ohe_test=ohe.transform(X_test[cat_list])
+column_name=ohe.get_feature_names_out(cat_list)
+X_test_ohe=pd.DataFrame(ohe_test,columns=column_name,index=X_test.index)
+
+# bring 'em together
+X_train_opt=pd.concat([X_train_scale,X_train_ohe],axis=1)
+X_test_opt=pd.concat([X_test_scale,X_test_ohe],axis=1)
+
+
+
+# ------------------------------------------------------------
+
+### SAVE FILES for further optimized modeling (directly in GitHub project)    
+    
+# X_train
+filename=r'data\kaggle\Kaggle_X_train_opt.csv'
+f=open(filename,'w',encoding='utf-8') # if only write ('w') specified, existing file will be replaced
+f.write(X_train_opt.to_csv())
+f.close()
+
+# X_test
+filename=r'data\kaggle\Kaggle_X_test_opt.csv'
+f=open(filename,'w',encoding='utf-8')
+f.write(X_test_opt.to_csv())
+f.close()
+
+# y_train
+filename=r'data\kaggle\Kaggle_y_train_opt.csv'
+f=open(filename,'w',encoding='utf-8')
+f.write(y_train_opt.to_csv())
+f.close()
+
+# y_test
+filename=r'data\kaggle\Kaggle_y_test_opt.csv'
+f=open(filename,'w',encoding='utf-8')
+f.write(y_test_opt.to_csv())
+f.close()
+
+
+# ------------------------------------------------------
+
+## new model
+
+# instantiate
+mnl=LogisticRegression(multi_class='multinomial',random_state=0)
+mnl_='Multinomial log'
+metrics=["MSE_test","RMSE_test","Train_score","Test_score"]
+df_mnl=pd.DataFrame({"model":mnl_,"id":range(6)})
+
+y_train_opt.value_counts()
+
+# GridSearch
+start_time=datetime.now()
+print("\n Starting the grid search for best mnl model\n at:",start_time.strftime("%H:%M:%S"))
+
+# define grid
+grid={'max_iter':range(100,201),
+      'solver':["sag"]}
+gs_mnl=GridSearchCV(estimator=mnl,param_grid=grid,
+                  cv=3,n_jobs=-1,verbose=2)
+
+# train model according to prior defined (hyper)parameters
+gs_mnl.fit(X_train_merge,y_train)
+
+# store predictions for later use in evaluation (eg, classification report)
+pred_train_mnl=gs_mnl.predict(X_train_opt)
+pred_test_mnl=gs_mnl.predict(X_test_opt)
+
+# fill metrics dataframe
+df_mnl["MSE test"]=mean_squared_error(y_test_opt,pred_test_mnl)
+df_mnl["RMSE test"]=np.sqrt(mean_squared_error(y_test_opt,pred_test_mnl))
+df_mnl["Train score"]=gs_mnl.score(X_train_opt,y_train_opt)
+df_mnl["Test score"]=gs_mnl.score(X_test_opt,y_test_opt)
+df_mnl["Best params"]=str(gs_mnl.best_params_)
+elapsed=(datetime.now()-start_time)/timedelta(seconds=1)
+df_mnl["Calculation time"]=elapsed
+    
+# Classification report
+print(classification_report(y_test,pred_test_mnl))
+    
+# How long did it take?
+print("Best model parameters found after:",elapsed,"seconds")
+
+
+# show metrics comparison 
+df_mnl
+df_mnl.set_index("metric",inplace=True)
+df_mnl

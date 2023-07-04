@@ -259,6 +259,8 @@ f.close()
 # ------------------------------------------------------
 
 ## new model
+from sklearn.utils.multiclass import type_of_target
+type_of_target(y_train_opt)
 
 # instantiate
 mnl=LogisticRegression(multi_class='multinomial',random_state=0)

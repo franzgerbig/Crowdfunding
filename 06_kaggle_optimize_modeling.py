@@ -12,12 +12,13 @@ Created on Sat Jul  1 15:23:09 2023
 ## settings
 import pandas as pd
 import numpy as np
-
+import matplotlib.pyplot as plt
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestRegressor
 
 # load data
+
 X_train_merge=pd.read_csv("data/kaggle/Kaggle_X_train_merge.csv",index_col='id')
 X_test_merge=pd.read_csv("data/kaggle/Kaggle_X_test_merge.csv",index_col='id')
 y_train=pd.read_csv("data/kaggle/Kaggle_y_train.csv")
@@ -41,7 +42,6 @@ for s in [X_train_merge,X_test_merge]:
     s[["country_US","country_GB_CA","country_rest"]].value_counts()
     for c in ["country_US","country_GB_CA","country_rest"]:
         print(s[c].value_counts())
-    print(s.info())
     print(s.isna().sum().sum())
 
 # drop dummies of countries grouped in country_rest    
@@ -89,10 +89,14 @@ for o in ["backers_count","usd_pledged","duration"]:
     X_test_merge.drop(o,axis=1,inplace=True)
 
 
+# retained columns are
+print("retained columns are:\n",X_train_merge.columns)
+# 
+
 ## start new modeling
 # import required methods
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
+# from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
@@ -103,11 +107,11 @@ from time import time
 
 # select and instantiate model types
 tree=DecisionTreeClassifier(random_state=0)
-log=LogisticRegression(random_state=0)
 rfc=RandomForestClassifier(random_state=0)
+# log=LogisticRegression(random_state=0)
 # prepare loop
-models =    [tree,rfc,log]
-models_=    ['tree','rfc','log']
+models =    [tree,rfc]
+models_=    ['tree','rfc']
 compare=pd.DataFrame({"model":models_,
     #                   "MSE_train":"",
     #                   "RMSE_train":"",
@@ -125,11 +129,11 @@ for m,m_ in zip(models,models_):
     
     # define model hyperparameters grid to search through for best combination
     if m_=='log':
-        grid={'max_iter':range(100,201),
+        grid={'max_iter':range(100,150),
               'solver':["sag"]}
               # 'solver':["lbfgs","liblinear","newton-cg"]}
     else:
-        grid={'max_depth':range(3,16),
+        grid={'max_depth':range(3,20),
               'criterion':["entropy","gini"]}
 
     # set grid parameters
@@ -156,9 +160,6 @@ for m,m_ in zip(models,models_):
     compare.loc[(compare['model']==m_),"Best params"]=str(gs_name.best_params_)
     elapsed=(datetime.now()-start_time)/timedelta(seconds=1)
     compare.loc[(compare['model']==m_),"Calculation time"]=elapsed
-    # print("best parameters:\n",gs_name.best_params_)
-    # print("train score:",gs_name.score(X_train_merge,y_train))
-    # print("test score:",gs_name.score(X_test_merge,y_test))
     
     # Classification report
     print(classification_report(y_test,pred_test_name))
@@ -166,13 +167,68 @@ for m,m_ in zip(models,models_):
     # How long did it take?
     print("Best model parameters found after:",elapsed,"seconds")
 
+
 # show metrics comparison 
 compare.set_index("model",inplace=True)
 compare
-# compare.T # Transpose?
+    
+# show and compare feature importances
+# tree
+tree=DecisionTreeClassifier(criterion='gini',
+                             max_depth=9,random_state=0)
+tree.fit(X_train_merge,y_train)    
+feat_importances=pd.DataFrame({
+    "Variables":X_train_merge.columns,
+    "Importance":tree.feature_importances_
+}).sort_values(by='Importance',ascending=False)
+feat_importances.nlargest(5, "Importance").plot.bar(x="Variables",y="Importance",
+                   figsize=(18, 5),color="#4529de");
+
+# rfc
+rfc=RandomForestClassifier(criterion='entropy',
+                           max_depth=15,random_state=0)    
+rfc.fit(X_train_merge,y_train)    
+feat_importances=pd.DataFrame({
+    "Variables":X_train_merge.columns,
+    "Importance":rfc.feature_importances_
+}).sort_values(by='Importance',ascending=False)
+
+# tree (ascending importance -> most negative coefs first)
+tree.fit(X_train_merge,y_train)    
+tree=DecisionTreeClassifier(criterion='gini',
+                            max_depth=9,random_state=0)
+feat_importances=pd.DataFrame({
+    "Variables":X_train_merge.columns,
+    "Importance":tree.feature_importances_
+}).sort_values(by='Importance',ascending=True)
+feat_importances.nlargest(5, "Importance").plot.bar(x="Variables",y="Importance",
+                   figsize=(18, 5),color="#4529de");
+
+
+
+# 
+selected=['goal_usd','creator_projects_1','main_category_food']
+tree.fit(X_train_merge[selected],y_train)    
+pred_test=tree.predict(X_test_merge[selected])
+
+# Classification report
+print(classification_report(y_test,pred_test))
+
+feat_importances.nlargest(5, "Importance").plot.bar(x="Variables",y="Importance",
+                   figsize=(18, 5),color="#4529de");
+feat_importances=pd.DataFrame({
+    "Variables":X_train_merge[selected].columns,
+    "Importance":tree.feature_importances_
+}).sort_values(by='Importance',ascending=False)
     
 
 # ----------------------------------------------------------------------
+
+# Stop execution here
+quit()
+
+"""
+# ----------------------------------------------------------------
 
 ### next steps
 
@@ -307,3 +363,8 @@ print("Best model parameters found after:",elapsed,"seconds")
 df_mnl
 df_mnl.set_index("metric",inplace=True)
 df_mnl
+
+
+# ----------------------------------------------------------------
+
+"""

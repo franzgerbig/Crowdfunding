@@ -73,7 +73,7 @@ X_train_scale.head()
 from sklearn.preprocessing import OneHotEncoder
 ohe=OneHotEncoder(sparse=False)
 cat_list=["currency","country","main_category","creator_projects",
- "launched_year","launched_day","status"]
+ "launched_year","launched_day"]
 
 # encode train set
 ohe_train=ohe.fit_transform(X_train[cat_list])

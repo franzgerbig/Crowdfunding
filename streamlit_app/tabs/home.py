@@ -2,7 +2,7 @@ import streamlit as st
 
 
 title = "My Awesome DataScientest project."
-sidebar_name = "Introduction"
+sidebar_name = "Menu"
 
 
 def run():
@@ -29,3 +29,4 @@ def run():
           (https://github.com/streamlit/demo-uber-nyc-pickups)
         """
     )
+

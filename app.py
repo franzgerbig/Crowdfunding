@@ -1,12 +1,14 @@
 from collections import OrderedDict
 
 import streamlit as st
+import importlib
 
 # TODO : change TITLE, TEAM_MEMBERS and PROMOTION values in config.py.
 import config
 
 # TODO : you can (and should) rename and add tabs in the ./tabs folder, and import them here.
-from tabs import intro, second_tab, third_tab
+import tabs
+from tabs import home, plots, data
 
 
 st.set_page_config(

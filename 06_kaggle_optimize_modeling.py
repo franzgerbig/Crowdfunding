@@ -174,15 +174,38 @@ compare
     
 # show and compare feature importances
 # tree
+# bar plot
 tree=DecisionTreeClassifier(criterion='gini',
                              max_depth=9,random_state=0)
 tree.fit(X_train_merge,y_train)    
-feat_importances=pd.DataFrame({
+tree_importances=pd.DataFrame({
     "Variables":X_train_merge.columns,
     "Importance":tree.feature_importances_
 }).sort_values(by='Importance',ascending=False)
-feat_importances.nlargest(5, "Importance").plot.bar(x="Variables",y="Importance",
+tree_importances.nlargest(5, "Importance").plot.bar(x="Variables",y="Importance",
                    figsize=(18, 5),color="#4529de");
+
+
+# tree coefs as line plot
+tree_importance=pd.DataFrame({'Variables':X_train_merge.columns,'Coefficient':tree.feature_importances_})
+display(tree_importance.sort_values(by='Coefficient',ascending=False))
+tree_importance_negatives=tree_importance.sort_values('Coefficient',ascending=True)
+tree_importance_positives=tree_importance.sort_values('Coefficient',ascending=False)
+
+# Plotting the Coefficeint DataFrame
+plt.figure(figsize=[10,10])
+plt.plot(tree_importance_positives['Variables'][0:5],tree_importance_positives['Coefficient'][:5])
+plt.ylabel('Coefficient')
+plt.xlabel('Variables')
+plt.title('Top 5 positive coefficients');
+
+plt.figure(figsize=[10,10])
+plt.plot(tree_importance_negatives['Variables'][0:5],log_importance_negatives['Coefficient'][:5])
+plt.ylabel('Coefficient')
+plt.xlabel('Variables')
+plt.title('Top 5 negative coefficients');
+plt.show()
+
 
 # rfc
 rfc=RandomForestClassifier(criterion='entropy',

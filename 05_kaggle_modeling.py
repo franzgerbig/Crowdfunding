@@ -35,7 +35,6 @@ for d in ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]:
     X_train_merge.drop(name,axis=1,inplace=True)
     X_test_merge.drop(name,axis=1,inplace=True)
 
-X_train_merge.shape
 
 
 ## Classification tree

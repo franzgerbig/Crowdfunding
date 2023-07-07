@@ -69,7 +69,7 @@ for p in ["year","month","week","wday"]:
         if p=="year":   df[name]=df[v].dt.year
         if p=="month":  df[name]=df[v].dt.month
         if p=="week":   df[name]=df[v].dt.week
-        if p=="wday":    df[name]=(df[v].dt.dayofweek)+1 # +1 to make the week start (more readable) with day 1 (instead of 0)
+        if p=="wday":   df[name]=(df[v].dt.dayofweek)+1 # +1 to make the week start (more readable) with day 1 (instead of 0)
         # print(df[name].value_counts(normalize=True)) # retain day of week at launch
 
 ## date-related distributions   
@@ -157,13 +157,79 @@ df_creator.rename(columns={"id":"creator_id"},inplace=True)
 # Building groups
 df_creator['creator_projects'].replace(1,'1',inplace=True)
 df_creator['creator_projects'].replace(list(range(2,6)),'2-5',inplace=True)
-df_creator['creator_projects'].replace(list(range(6,15)),'6-14',inplace=True)
-df_creator['creator_projects'].replace(list(range(15,30)),'15-29',inplace=True)
-df_creator['creator_projects'].replace(list(range(30,100)),'30+',inplace=True)
+df_creator['creator_projects'].replace(list(range(6,16)),'6-15',inplace=True)
+df_creator['creator_projects'].replace(list(range(16,31)),'15-30',inplace=True)
+df_creator['creator_projects'].replace(list(range(31,100)),'31+',inplace=True)
 df_creator['creator_projects'].value_counts()
 
 # merge to main dataframe
 df=df.merge(right=df_creator,on="creator_id",how="inner")
+
+
+# Word cloud of blurb
+df.blurb.head()
+
+# create wordcloud and map it on the shape of the kickstarter logo
+from PIL import Image
+import numpy as np
+import nltk
+from nltk.corpus import stopwords
+import re
+
+stop_words=set(stopwords.words('english'))
+print(stop_words)
+df.country.value_counts()
+stop_words.update(["?", "!", ".", ",", ":", ";", "-", "--", "...", '"', "'", "they've", "they're", "they'll", "i've", "i'm", "i'll", "could",r"[0-9](\.|,)[0-9]",r"([A-Z])[$€¥£]",r"\bzł\b",r"\bCHF\b",r"\bkr\b",r"\bUSA?\b",r"\bUSD\b","+"])
+print(stop_words)
+
+# remove stop words
+df["blurb_clean"]=df["blurb"].apply(lambda x:' '.join([entry for entry in x.split() if entry not in (stop_words)]))
+df.loc[df['status']=='successful'].blurb_clean.unique
+df.loc[df['status']=='failed'].blurb_clean.unique
+
+
+blurbs_success=str(df.loc[df['status']=='successful'].blurb_clean.unique())
+blurbs_fail=str(df.loc[df['status']=='failed'].blurb_clean.unique())
+for blurb,suffix in zip([blurbs_success,blurbs_fail],["success","fail"]):
+    from nltk.tokenize import TweetTokenizer
+    tokenizer=TweetTokenizer()
+    name="tokens_"+suffix
+    name=tokenizer.tokenize(blurb)
+    len(name)
+# print(blurb_tokens)
+
+    from sklearn.feature_extraction.text import CountVectorizer
+    vectorizer=CountVectorizer()
+    vectorizer.fit_transform(name)
+    print(vectorizer.fit_transform(name).toarray().shape)
+    len(name)
+    print(name)
+
+# Import the WordCloud class from the library wordcloud
+from wordcloud import WordCloud
+
+# build function for creation and mapping of the word cloud
+def plot_word_cloud(text,mask,background_color="black"):
+    """
+    This function creates a word cloud and maps on an image.
+    """
+    
+    # Define a mask
+    mask_coloring=np.array(Image.open(str(mask)))
+
+    # Define the layer of the word cloud
+    wc=WordCloud(background_color=background_color, max_words=200,stopwords=stop_words,mask=mask_coloring, max_font_size=50,random_state=0)
+    
+    # Generate and display the word cloud
+    plt.figure(figsize=(20,10))
+    wc.generate(text)
+    plt.imshow(wc)
+    plt.axis("off")
+    plt.show()
+
+plot_word_cloud(df.blurb,"images/kick_logo.png");
+
+
 
 
 ## (pre)select features (columns) to retain for further processing

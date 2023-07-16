@@ -173,16 +173,57 @@ df.blurb.head()
 from PIL import Image
 import numpy as np
 import nltk
+
+from nltk.tokenize import TweetTokenizer
+tokenizer=TweetTokenizer()
+success=df.loc[df["status"]=="successful"].blurb.tolist()
+fail=df.loc[df["status"]=="failed"].blurb.tolist()
+tokens_success=tokenizer.tokenize(str(success))
+len(tokens_success)
+tokens_fail=tokenizer.tokenize(str(fail))
+len(tokens_fail)
+
+# Display the total number of words as well as the number of different words found in these speeches.
+from sklearn.feature_extraction.text import CountVectorizer
+vectorizer=CountVectorizer()
+vectorizer.fit_transform(tokens)
+print(vectorizer.fit_transform(tokens).toarray().shape)
+len(tokens)
+
+# define unwanted 'words'
 from nltk.corpus import stopwords
 import re
-
 stop_words=set(stopwords.words('english'))
 print(stop_words)
 df.country.value_counts()
-stop_words.update(["?", "!", ".", ",", ":", ";", "-", "--", "...", '"', "'", "they've", "they're", "they'll", "i've", "i'm", "i'll", "could",r"[0-9](\.|,)[0-9]",r"([A-Z])[$€¥£]",r"\bzł\b",r"\bCHF\b",r"\bkr\b",r"\bUSA?\b",r"\bUSD\b","+"])
+stop_words.update(["?","!",".",",",":",";","-","--", "...",'"',"'","they've","they're","they'll","i've","i'm", "i'll","could",r"[0-9](\.|,)[0-9]",r"[0-9]*",r"([A-Z]+)[$€¥£]",r"\bzł\b",r"\bCHF\b",r"\bkr\b",r"\bUS([A-Z])\b",r"\+"])
 print(stop_words)
 
 # remove stop words
+def stop_words_filtering(wordlist):
+    for word in wordlist:
+        if word in stop_words:
+            # print("taking out '",word,"'")
+            wordlist.remove(word)  # still some occurrences left, but at least filters some
+    # new=""
+    # for word in stop_words:
+    #     if word in wordlist:
+    #         print("taking out '",word,"'")
+    #         r=re.compile(f"{word}.?")
+    #         new=r.sub("",str(wordlist))
+    # wordlist=new
+    return wordlist
+
+from time import time
+start=time()
+tokens_s=stop_words_filtering(tokens_success)
+print("processing time (success):",time()-start,"seconds")
+start=time()
+tokens_f=stop_words_filtering(tokens_fail)
+print("processing time (success):",time()-start,"seconds")
+
+[stop_words_filtering(w) for w in df["blurb"].tolist()]
+
 df["blurb_clean"]=df["blurb"].apply(lambda x:' '.join([entry for entry in x.split() if entry not in (stop_words)]))
 df.loc[df['status']=='successful'].blurb_clean.unique
 df.loc[df['status']=='failed'].blurb_clean.unique

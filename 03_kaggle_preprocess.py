@@ -52,7 +52,7 @@ from sklearn.model_selection import train_test_split
 # separate explanatory and target variable(s)
 X=df_final.drop("status",axis=1)
 y=df_final['status'].replace(['successful','failed'],[1,0]) # on the fly: assign numerical values to target categories
-X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=.3,random_state=0)
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=.2,random_state=0)
 
 
 ## standardization (since variables don't share same scale)

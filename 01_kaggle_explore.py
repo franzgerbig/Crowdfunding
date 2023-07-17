@@ -150,21 +150,22 @@ df.backers_count.value_counts().sort_index(ascending=False)[:20]
 # count projects per creator 
 df_creator=pd.DataFrame(df['creator_id'].value_counts())
 df_creator['id']=df_creator.index
-df_creator['creator_projects']=df_creator['creator_id']
+df_creator['creator_project_counts']=df_creator['creator_id']
 df_creator.drop("creator_id",axis=1,inplace=True)
 df_creator.rename(columns={"id":"creator_id"},inplace=True)
+df_creator
 
 # Building groups
-df_creator['creator_projects'].replace(1,'1',inplace=True)
-df_creator['creator_projects'].replace(list(range(2,6)),'2-5',inplace=True)
-df_creator['creator_projects'].replace(list(range(6,16)),'6-15',inplace=True)
-df_creator['creator_projects'].replace(list(range(16,31)),'15-30',inplace=True)
-df_creator['creator_projects'].replace(list(range(31,100)),'31+',inplace=True)
-df_creator['creator_projects'].value_counts()
+df_creator.loc[df_creator['creator_project_counts']==1,'creator_projects']='1'
+df_creator.loc[(df_creator['creator_project_counts']>=2) & (df_creator['creator_project_counts']<=5),'creator_projects']='2-5'
+df_creator.loc[(df_creator['creator_project_counts']>=6) & (df_creator['creator_project_counts']<=15),'creator_projects']='6-15'
+df_creator.loc[(df_creator['creator_project_counts']>=16) & (df_creator['creator_project_counts']<=30),'creator_projects']='16-30'
+df_creator.loc[(df_creator['creator_project_counts']>=31),'creator_projects']='31+'
+pd.crosstab(df_creator['creator_project_counts'],df_creator['creator_projects'],dropna=False)
 
 # merge to main dataframe
 df=df.merge(right=df_creator,on="creator_id",how="inner")
-
+df['creator_projects'].value_counts()
 
 # Word cloud of blurb
 df.blurb.head()
@@ -176,8 +177,8 @@ import nltk
 
 from nltk.tokenize import TweetTokenizer
 tokenizer=TweetTokenizer()
-success=df.loc[df["status"]=="successful"].blurb.tolist()
-fail=df.loc[df["status"]=="failed"].blurb.tolist()
+success=df.loc[df["status"]=="successful"].name.tolist()
+fail=df.loc[df["status"]=="failed"].name.tolist()
 tokens_success=tokenizer.tokenize(str(success))
 len(tokens_success)
 tokens_fail=tokenizer.tokenize(str(fail))

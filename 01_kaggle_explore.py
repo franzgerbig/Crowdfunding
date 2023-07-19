@@ -108,7 +108,7 @@ plt.title("Distribution of campaign durations");
 df.describe(include="object")
 
 # reverse column names of category variables
-new={"main_category":"sub_category",
+new={"main_category":"sub_category2",
 "sub_category":"main_category"}
 df.rename(columns=new,inplace=True)
 
@@ -168,7 +168,7 @@ df=df.merge(right=df_creator,on="creator_id",how="inner")
 df['creator_projects'].value_counts()
 
 # Word cloud of blurb
-df.blurb.head()
+df.name.head()
 
 # create wordcloud and map it on the shape of the kickstarter logo
 from PIL import Image
@@ -184,20 +184,13 @@ len(tokens_success)
 tokens_fail=tokenizer.tokenize(str(fail))
 len(tokens_fail)
 
-# Display the total number of words as well as the number of different words found in these speeches.
-from sklearn.feature_extraction.text import CountVectorizer
-vectorizer=CountVectorizer()
-vectorizer.fit_transform(tokens)
-print(vectorizer.fit_transform(tokens).toarray().shape)
-len(tokens)
-
 # define unwanted 'words'
 from nltk.corpus import stopwords
 import re
 stop_words=set(stopwords.words('english'))
 print(stop_words)
 df.country.value_counts()
-stop_words.update(["?","!",".",",",":",";","-","--", "...",'"',"'","they've","they're","they'll","i've","i'm", "i'll","could",r"[0-9](\.|,)[0-9]",r"[0-9]*",r"([A-Z]+)[$€¥£]",r"\bzł\b",r"\bCHF\b",r"\bkr\b",r"\bUS([A-Z])\b",r"\+"])
+stop_words.update(["?","!",".",",",":",";","-","--", "...",'"',"'",r".hey've",r".hey're",r".hey'll",r".'ve",r".'m", r".'ll","could",r"[0-9](\.|,)[0-9]",r"[0-9]*",r"([A-Z]+)[$€¥£]",r"\bzł\b",r"\bCHF\b",r"\bkr\b",r"\bUS([A-Z])\b",r"\+",r".roject",".?he","[","]",r".+'$"])
 print(stop_words)
 
 # remove stop words
@@ -222,30 +215,11 @@ print("processing time (success):",time()-start,"seconds")
 start=time()
 tokens_f=stop_words_filtering(tokens_fail)
 print("processing time (success):",time()-start,"seconds")
-
-[stop_words_filtering(w) for w in df["blurb"].tolist()]
-
-df["blurb_clean"]=df["blurb"].apply(lambda x:' '.join([entry for entry in x.split() if entry not in (stop_words)]))
-df.loc[df['status']=='successful'].blurb_clean.unique
-df.loc[df['status']=='failed'].blurb_clean.unique
-
-
-blurbs_success=str(df.loc[df['status']=='successful'].blurb_clean.unique())
-blurbs_fail=str(df.loc[df['status']=='failed'].blurb_clean.unique())
-for blurb,suffix in zip([blurbs_success,blurbs_fail],["success","fail"]):
-    from nltk.tokenize import TweetTokenizer
-    tokenizer=TweetTokenizer()
-    name="tokens_"+suffix
-    name=tokenizer.tokenize(blurb)
-    len(name)
-# print(blurb_tokens)
-
-    from sklearn.feature_extraction.text import CountVectorizer
-    vectorizer=CountVectorizer()
-    vectorizer.fit_transform(name)
-    print(vectorizer.fit_transform(name).toarray().shape)
-    len(name)
-    print(name)
+tokens_s=stop_words_filtering(tokens_s)
+len(tokens_s)
+tokens_f=stop_words_filtering(tokens_f)
+len(tokens_f)
+print(tokens_s[:5])
 
 # Import the WordCloud class from the library wordcloud
 from wordcloud import WordCloud
@@ -260,18 +234,24 @@ def plot_word_cloud(text,mask,background_color="black"):
     mask_coloring=np.array(Image.open(str(mask)))
 
     # Define the layer of the word cloud
-    wc=WordCloud(background_color=background_color, max_words=200,stopwords=stop_words,mask=mask_coloring, max_font_size=50,random_state=0)
+    wc=WordCloud(background_color=background_color, max_words=200,stopwords=stop_words,mask=mask_coloring, max_font_size=100,random_state=0)
     
     # Generate and display the word cloud
-    plt.figure(figsize=(20,10))
+    plt.figure(figsize=(10,10))
     wc.generate(text)
     plt.imshow(wc)
     plt.axis("off")
-    plt.show()
+    
+    # save wordcloud to disk
+    # plt.savefig(f'images/wc_{text}.png',bbox_inches='tight')
+    # plt.show();
 
-plot_word_cloud(df.blurb,"images/kick_logo.png");
-
-
+plot_word_cloud(str(tokens_s),"images/kick_vector_logo.png")
+plt.savefig('images/wc_s.png',bbox_inches='tight')
+plt.show();
+plot_word_cloud(str(tokens_f),"images/kick_vector_logo.png")
+plt.savefig('images/wc_f.png',bbox_inches='tight')
+plt.show();
 
 
 ## (pre)select features (columns) to retain for further processing

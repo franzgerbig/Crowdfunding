@@ -15,8 +15,10 @@ TEAM_MEMBERS = [
     Member(
         name="Franz Gerbig",
         linkedin_url="https://www.linkedin.com/in/franzgerbig",
-        github_url="https://github.com/franzgerbig",
+        github_url="https://github.com/franzgerbig"
     ),
-    Member("Hendrik Bosse"),
+    Member( 
+        name="Hendrik Bosse",
+        github_url="https://github.com/hebosse",
+    )
 ]
-

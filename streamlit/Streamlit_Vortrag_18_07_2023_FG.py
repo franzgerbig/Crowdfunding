@@ -83,9 +83,9 @@ if page==pages[1]:
     st.markdown("##### Description")
     st.markdown(f"The dataframe contains {rows} project campaigns (rows) described by {cols} features (columns).")
     if st.sidebar.checkbox('Numerical Variables'):
-        df.describe(exclude=["object","int","bool"])
-    if st.sidebar.checkbox('Categorical Variables'):
         df.describe(include="float")
+    if st.sidebar.checkbox('Categorical Variables'):
+        df.describe(exclude="float")
 
 
 # Visualization

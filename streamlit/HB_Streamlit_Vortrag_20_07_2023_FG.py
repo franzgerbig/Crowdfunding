@@ -134,7 +134,6 @@ if page==pages[0]:
 if page==pages[1]:
     st.title(pages[1])    
     
-
     # present data
     st.write('##### Dataset',df_dup.head())
 
@@ -152,20 +151,48 @@ if page==pages[1]:
     df_dup.drop("sub_category2",axis=1,inplace=True)
     
     # general description
+    numeric=df_dup.select_dtypes("number")
+    numeric.remove(["Unnamed: 0","id","creator_id"])
+    categoric=df_dup.select_dtypes("object")
+    categoric.append(["id","creator_id"])
     if st.sidebar.checkbox('Numerical Variables'):
-        st.table(df_dup.describe(include=["number"]))
+        st.table(df_dup.describe(include=numeric)
     if st.sidebar.checkbox('Categorical Variables'):
-        st.table(df_dup.describe(exclude=["number"]))
+        st.table(df_dup.describe(include=categoric)
 
-    st.write("##### Data cleaning")
-    st.markdown("If you pay attention to the description of the variable 'id', you'll notice, it's not unique, which is, some projects appear more than once. For all further steps, we will keep only the first ocurrence of each project id, respectively.")
-    st.markdown("Another interesting aspect is, that the creator_id neither is unique. That is: there are creators with more than one projects run on Kickstarter. We will come back to this later.")
+
+    st.write("##### Data cleaning")    
     
     # target identification
     st.write("##### Target Variable")
-    st.markdown("Since, we want to predict the success of crowdfunding campaigns on Kickstarter, the most interesting variable is 'status' - the target variable. For this, we can also note redundancies: Some projects may not be evaluated, since they belong neither to the category 'successful' nor to 'failed' projects. Those (unclear) projects will be dropped, too.")
-        
-        
+    st.markdown("Since we want to predict the success of crowdfunding campaigns on Kickstarter, the most interesting variable is 'status' - the target variable. For this, we can also note redundancies: Some projects may not be evaluated, since they belong neither to the category 'successful' nor to 'failed' projects. Those (unclear) projects will be dropped.")
+    # plot the categories
+    def countplt_status():
+        sns.countplot(data=df_dup,x="status")
+        plt.title("Frequencies of status categories");
+    st.pyplot(countplt_status())
+    
+    if st.button("Clean target"):
+        # Only Successful and failed projects are important for us
+        df_dup=df_dup.loc[(df['status']=='successful')|(df['status']=='failed')]
+
+    # duplicates (id)
+    st.write("##### Duplicates (?)")
+    st.markdown("Do we need to account for duplicated rows in the dataset? Let's check this in terms of the variable 'id'.")    
+    if st.button("Check duplicates",help="Click to check for and delete duplicates (if applicable)."):
+        general_dups=df_dup.duplicated.sum().sum()
+        id_dups=df_dup.id.duplicated.sum()
+        if id_dups>0:
+            df_dup=drop_duplicates(keep='first',inplace=True,subset='id')
+            st.markdown("Congratulations - you deleted {id_dups} duplicated rows!")
+        else: 
+            st.markdown("Relax - no need to delete duplicated rows.")
+    
+    # creator (creator_id)
+    st.write("##### Creators")
+    st.markdown("Another interesting aspect is, that the creator_id neither is unique. That is: there are creators with more than one projects run on Kickstarter. We will come back to this later ...")
+
+
 #################### Data Exploration ###########################################################
 if page==pages[2]:
     # add title

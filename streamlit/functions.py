@@ -45,7 +45,8 @@ def simple_currency():
 # proprocessing
 def preprocess():
     # Only Successful and failed projects are important for us
-    df=df[(df['status']=='successful')|(df['status']=='failed')]
+    df=df.loc[(df['status']=='successful')|(df['status']=='failed')]
+    # drop duplicates
     df.drop_duplicates(keep='first',inplace=True,subset='id')
     
     # reverse column names of category variables correctly

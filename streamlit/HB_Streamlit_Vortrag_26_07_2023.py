@@ -13,26 +13,22 @@ import crowd_config
 import members
 
 
-# Coloring
-# background-image: url(https://thumbs.dreamstime.com/z/business-success-3996128.jpg?w=992)}
-[theme]
-primaryColor="#F63366"
-backgroundColor="#05ce78"
-secondaryBackgroundColor="#F0F2F6"
-textColor="#262730"
-font="sans serif"
+# Coloring -> ...\GitHub\MAY23_BDA_INT_Crowdfunding\streamlit\.streamlit\config.toml
 
-page_img="""
-<style>
-[data-testid="stAppViewContainer"]{
-background-color:#dcf1c5;
-background-image: url(https://thumbs.dreamstime.com/z/business-success-3996128.jpg?w=992)}
-<style>
-"""
+# page settings
+st.set_page_config(
+    page_title=crowd_config.TITLE,
+    page_icon="images/kickstarter-logo-k-green.png",
+)
 
+# build sub pages
+st.sidebar.title("Menu")
+pages=["Introduction","Data Source","Data Exploration","Preprocessing","Modeling",'Results','Conclusions']
+page=st.sidebar.radio("Navigation",options=pages)
 ###### Title
-st.markdown(page_img,unsafe_allow_html=True)
-st.title('Kickstarter Success Factors')
+# st.markdown(page_img,unsafe_allow_html=True)
+if page!=pages[0]: 
+    st.title(crowd_config.TITLE)
 
 # Customazation of the Variables, yes =1 and no =0
 simp_country=0
@@ -45,10 +41,6 @@ cat_backers_count=0
 not_used_list=['city','main_category']
 num_list=['goal_usd','usd_pledged','backers_count','duration']
 cat_list=['country','currency','creator_projects','sub_category','launched_year']
-# build pages
-st.sidebar.title("Menu")
-pages=["Introduction","Data Source","Data Exploration","Preprocessing","Modeling",'Results','Conclusions']
-page=st.sidebar.radio("Navigation",options=pages)
 
 # Checkboxes for Variables
 if st.sidebar.checkbox('Modeling Options'):
@@ -68,14 +60,15 @@ if st.sidebar.checkbox('Modeling Options'):
     # Add Variables
     st.sidebar.markdown('#### Realistic Options (recommended)')
     st.sidebar.write('Info: Deletes Variables for a more realistic model')
-    if st.sidebar.checkbox('Number of supporters'):
+    if st.sidebar.checkbox('Number of backers'):
         num_list.remove('backers_count')
     if st.sidebar.checkbox('Duration of the project'):
         num_list.remove('duration')
-    if st.sidebar.checkbox('Launched year'):
-        cat_list.remove('launched_year')
     if st.sidebar.checkbox('Pledged amount in USD'):
-        num_list.remove('usd_pledged')
+        num_list.remove('usd_pledged')    
+    if st.sidebar.checkbox('Year of launch'):
+        cat_list.remove('launched_year')
+
         
 # Import and present data
 # imp=r"C:\Users\bosse\Desktop\Notebooks\Data\Project\Kaggle_dedub.csv"
@@ -177,8 +170,10 @@ for item in X_test_merge.columns:
 #################### Introduction ###############################################################
 if page==pages[0]:
     st.title(pages[0])
+    # Kickstarter wordmark as header image
+    st.title('Success Factors on')
+    st.image("images/kickstarter-logo-green.png")
 
-    st.markdown(f"# {crowd_config.TITLE}")
     st.markdown(f"## {crowd_config.PROMOTION}")
     st.markdown("### Team members")
     for i,member in enumerate(crowd_config.TEAM_MEMBERS):
@@ -195,7 +190,7 @@ if page==pages[0]:
     st.markdown("### Project criteria")
     st.markdown("The analysis project should fullfil the following criteria")
     st.markdown("- applicable \n - low cost \n - easily adaptable")
-    
+
     # st.markdown("##### From a technical point of view")
     # st.markdown("The analysis should be adaptable easily to future needs of modifications and other analysis projects in different realms.")
     
@@ -212,33 +207,70 @@ if page==pages[1]:
     # describe data source (web page)
     url="https://www.kaggle.com/yashkantharia/kickstarter-campaigns-dataset-20"
     st.markdown(f'''The original dataset was downloaded from the data science network kaggle and may be accessed (as .csv without any cost) <a href={url} target="_blank" title="go download kaggle raw dataset">here</a>. ''',unsafe_allow_html=True)
-
-    #
-    st.table(df.info())
     
     # present original data
     df_dup=pd.read_csv(imp_org)
     st.write('##### Raw dataset',df_dup.head())
+    dups=df_dup.id.duplicated().sum()
     rows=df_dup.shape[0]
     cols=df_dup.shape[1]
-    st.markdown(f"This original dataframe contains {rows} (non-unique) project campaigns (rows) described by {cols} features (columns).")
+    nans=df_dup.isna().any().sum().sum()
+    
+    # create two page columns
+    col1,col2=st.columns(2)
+    with col1:
+        st.markdown(f"This original dataframe contains {rows} (non-unique) project campaigns (rows, including {dups} duplicates) described by {cols} features (columns), and {nans} missing values:")
+    with col2:
+        def infoOut(data):
+            dfInfo=data.columns.to_frame(name='Column')
+            dfInfo['Non-Null Count']=data.notna().sum()
+            dfInfo['Dtype']=data.dtypes
+            dfInfo.reset_index(drop=True,inplace=True)
+            return dfInfo
+        # credits: https://stackoverflow.com/questions/64067424/how-to-convert-df-info-into-data-frame-df-info
+        st.write(infoOut(df_dup))
+    
+    # target identification
+    st.write("##### Target Variable")
+    st.markdown("For predicting success of crowdfunding campaigns the most interesting variable is 'status'. For this, we can also note redundancies: Some projects may not be evaluated, since they belong neither to the category 'successful' nor to 'failed' projects.")
 
+    # countplot
+    # status colors by default (tab10): success=#ff7f0e (orange), fail=#1f77b4 (blue)
+    # status colors: success=#1f77b4t (blue), fail=#ff7f0e (orange)
+    tab10_2a=["#ff7f0e",
+             "#1f77b4",
+             "#2ca02c",
+             "#d62728",
+             "#9467bd",
+             "#8c564b",
+             "#e377c2",
+             "#7f7f7f",
+             "#bcbd22",
+             "#17becf"]
+    def countplt_target(data,X):
+        sns.set_palette(sns.color_palette(tab10_2a))
+        sns.countplot(x=data[X],order=data[X].value_counts().index)
+        #sns.color_palette("rocket")
+        #plt.xlabel(data[X])
+        plt.xticks(rotation=45,ha="right")
+        plt.title(f"Frequencies of {X} categories");
+    countplot=countplt_target(df_dup,'status')
+    st.pyplot(countplot)
+    
     st.write("##### Data cleaning")
-    dups=df_dup.id.duplicated().sum()
     st.markdown("In first place, we deleted ...")
-    st.markdown(f"- {dups} duplicated rows in terms of the project identificator variable 'id' \n - status categories not relevant for the analysis project")
-    st.markdown("Some variables were created ...")
+    st.markdown(f"- duplicated rows in terms of the project identificator variable 'id' \n - status categories not relevant for the analysis project")
+    st.markdown("Some variables were derived from others ...")
     st.markdown("- year when the kickstarter campaign was launched (launched_year) \n - number of projects a creator has realized on kickstarter (creator_projects)")
-    st.markdown("Moreover, the variables of main and sub category are named vice versa (having more value). We reversed that back.")
+    st.markdown("Moreover, the variables of main and sub category projects belong to, are named vice versa (having more main than sub categories). We reversed that.")
 
-    st.markdown("If you pay attention to the description of the variable 'id', you'll notice, it's not unique, which is, some projects appear more than once. For all further steps, we will keep only the first ocurrence of each project id, respectively.")
     
     # turn to deduplicated dataset
     # describe data
-    st.sidebar.write('Data description')
+    st.sidebar.write('Cleaned data description')
     rows=df.shape[0]
     cols=df.shape[1]
-    st.markdown("##### Description")
+    st.markdown("##### Description of the cleaned dataset")
     st.markdown(f"The dataframe contains {rows} (unique) project campaigns (rows) described by {cols} features (columns).")
         
     # general description
@@ -249,33 +281,46 @@ if page==pages[1]:
         st.write('Summary of categorical variables')
         st.table(df.describe(exclude=["number"]))
         # st.table(df.select_dtypes("object").value_counts())
-    
-        
-    st.markdown("Another interesting aspect is, that the creator_id neither is unique. That is: there are creators with more than one projects run on Kickstarter. We will come back to this later.")
-    
-    # target identification
-    st.write("##### Target Variable")
-    st.markdown("Since, we want to predict the success of crowdfunding campaigns on Kickstarter, the most interesting variable is 'status' - the target variable. For this, we can also note redundancies: Some projects may not be evaluated, since they belong neither to the category 'successful' nor to 'failed' projects. Those (unclear) projects will be dropped, too.")
-        
+    # create two page columns
+    col1,col2=st.columns(2)
+    with col1:        
+        st.write(infoOut(df)) 
+    with col2:
+        st.markdown("Another interesting aspect is, that the 'creator_id' neither is unique. That is: there are creators with more than one project run on Kickstarter.")
+
 
 #################### Data Exploration ###########################################################
 if page==pages[2]:
     # add title
     st.title(pages[2])
     
-    # visual exploration
-    #st.write('Bar chart')
-    #st.bar_chart(df['status'])
+    # divide page into columns
+    col1,col2=st.columns(2)
     
+    # to maintain color "order" of status categories (orange=success)
+    tab10_2b=["#1f77b4",
+             "#ff7f0e",
+             "#2ca02c",
+             "#d62728",
+             "#9467bd",
+             "#8c564b",
+             "#e377c2",
+             "#7f7f7f",
+             "#bcbd22",
+             "#17becf"]
+    sns.set_palette(sns.color_palette(tab10_2b))
+
     # countplot
     def countplotFG(X,HUE):
+        plt.figure(figsize=(12,12))
         sns.countplot(x=df[X],hue=df[HUE],order=df[X].value_counts().index)
         plt.xlabel(X)
         plt.xticks(rotation=45,ha="right")
-        plt.title(f"Frequencies of {X} by {HUE}");
-    countplot=countplotFG('main_category','status')
-    st.pyplot(countplot)  
-    st.markdown("- some explanation summary \n - some more")
+        plt.title(f"Frequencies of {X} by {HUE}")
+        plt.legend(labels=["failed","successful"])
+    with col1:
+        st.pyplot(countplotFG('main_category','status'))  
+        st.markdown("- entertainment & art! \n - techies & foodies less welcome")
     
     # interactive
     # nr_backers=st.slider('Quantiles Number of backers',value=100)
@@ -290,12 +335,14 @@ if page==pages[2]:
     
     # status by launched_year 
     def yearplot(data,X,HUE):
-        plt.figure(figsize=(7,7))
+        plt.figure(figsize=(12,12))
         sns.countplot(x=data[X],hue=data[HUE])
         plt.xlabel(X)
         plt.xticks(rotation=45)
         plt.title(f"Number of projects by years of launch and {HUE}");
-    st.pyplot(yearplot(df,"launched_year","status"))
+    with col2:
+        st.pyplot(yearplot(df,"launched_year","status"))
+        st.markdown("- What happened 2015? \n - (And 2017?)")
     
     # goal=st.slider('Quantiles Number of backers',value=100)
     # quantiles=df['goal_usd'].quantile(q=[0,goal/100])
@@ -307,18 +354,35 @@ if page==pages[2]:
     # df_goal=df.loc[(df['goal_usd']<=quantiles.to_list()[1])]
     # st.pyplot(boxplot(df_goal['goal_usd']))
 
+    # number of projects by country    
+    countries=pd.read_csv('countries.csv')
+    # countries_sort=countries.sort_values(by="success%",ascending=False)
+    def countriesplot():
+        countries_sort=countries.sort_values(by="projects_count",ascending=False)
+        plt.figure(figsize=(12,12))
+        sns.catplot(x="countryname",y="projects_count",kind="bar",data=countries_sort)
+        plt.xlabel("Country")
+        plt.xticks(rotation=45,ha="right")
+        plt.title("Number of projects by country");
+    with col1:
+        st.pyplot(countriesplot())  
+        st.markdown("- Crowdfunding: A US-American phenomenon?")
+
     # success rate by country
-    def violinplot():
-        plt.figure(figsize=(7,7))
-        sns.catplot(x="countryname",y="success%",kind="violin",data=countries)
+    def countriesplot():
+        countries_sort=countries.sort_values(by="success%",ascending=False)
+        plt.figure(figsize=(12,12))
+        sns.catplot(x="countryname",y="success%",kind="bar",data=countries_sort)
         plt.xlabel("Country")
         plt.xticks(rotation=45,ha="right")
         plt.title("Success rate by country");
-    st.pyplot(violinplot())
+    with col2:
+        st.pyplot(countriesplot())
+        st.markdown("- It's about more than quantity (cf Hong Kong)!")
+
     
     # (world) map
-    countries=pd.read_csv('countries.csv')
-    # st.map(data=countries,latitude="lat",longitude="lon",size=df["projects_count"],zoom=None,use_container_width=True)
+    # st.map(data=countries,latitude="lat",longitude="lon",size="projects_count",zoom=None,use_container_width=True)
     
     # with mapbox (pdk)
     # st.pydeck_chart(pdk.Deck(

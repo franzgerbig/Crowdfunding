@@ -6,10 +6,9 @@ Config file for Streamlit App
 
 from members import Member
 
+TITLE = "Kickstarter Success Factors"
 
-TITLE = "Give your crowdfunding a kick? Success prediction of crowdfunding campaigns on Kickstarter"
-
-PROMOTION = "Bootcamp Data Analyst\nMay 2023"
+PROMOTION = "Bootcamp Data Analyst (May 2023)"
 
 TEAM_MEMBERS = [
     Member(

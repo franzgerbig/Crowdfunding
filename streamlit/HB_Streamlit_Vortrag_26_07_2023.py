@@ -19,6 +19,7 @@ import members
 st.set_page_config(
     page_title=crowd_config.TITLE,
     page_icon="images/kickstarter-logo-k-green.png",
+    # page_icon="images/kickstarter-logo-k-white.png",
 )
 
 # build sub pages
@@ -172,7 +173,7 @@ if page==pages[0]:
     st.title(pages[0])
     # Kickstarter wordmark as header image
     st.title('Success Factors on')
-    st.image("images/kickstarter-logo-green.png")
+    st.image("images/kickstarter-logo-white.png")
 
     st.markdown(f"## {crowd_config.PROMOTION}")
     st.markdown("### Team members")

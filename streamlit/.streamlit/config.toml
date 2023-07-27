@@ -43,21 +43,27 @@ dataFrameSerialization = "arrow"
 # base =
 
 # Primary accent color for interactive elements.
-primaryColor ="#00000"
+# primaryColor ="#00000"
 
 # Background color for the main content area.
-backgroundColor ="#05ce78"
+# backgroundColor ="#05ce78"
+# backgroundColor ="#c9f5b6"
 
 # Background color used for the sidebar and most interactive widgets.
-secondaryBackgroundColor ="#fffff"
+# secondaryBackgroundColor ="#00000"
 
 # Color used for almost all text.
-# textColor =
+# textColor ="#fffff"
 
 # Font family for all text in the app, except code blocks. One of "sans serif",
 # "serif", or "monospace".
 # font ="sans serif"
 
+base="light"
+primaryColor="#000000"
+backgroundColor="#f0f2f6"
+secondaryBackgroundColor="#05ce78"
+textColor=#31333F
 
 [mapbox]
 # Configure Streamlit to use a custom Mapbox

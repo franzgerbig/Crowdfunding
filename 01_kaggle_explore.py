@@ -167,7 +167,7 @@ pd.crosstab(df_creator['creator_project_counts'],df_creator['creator_projects'],
 df=df.merge(right=df_creator,on="creator_id",how="inner")
 df['creator_projects'].value_counts()
 
-# Word cloud of blurb
+# Word cloud of project names
 df.name.head()
 
 # create wordcloud and map it on the shape of the kickstarter logo

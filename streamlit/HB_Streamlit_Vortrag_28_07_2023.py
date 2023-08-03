@@ -84,10 +84,8 @@ df=pd.read_csv(imp,index_col='id')
 df.drop(columns='Unnamed: 0',inplace=True)
 
 
-
-
-# reverse column names of category variables correctly for data description & exploration
 if (page==pages[1]) | (page==pages[2]) | (page==pages[3]):
+    # reverse column names of category variables correctly for data description & exploration
     new={"main_category":"sub_category2",
     "sub_category":"main_category"}
     df.rename(columns=new,inplace=True)

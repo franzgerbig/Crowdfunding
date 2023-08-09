@@ -1,5 +1,7 @@
+# input for terminal (e.g. CMD.exe)
 # cd C:\...\GitHub\MAY23_BDA_INT_Crowdfunding\streamlit
 # streamlit run streamlit_crowdfunding_BDA_May23.py
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -9,6 +11,7 @@ import scipy.stats as stats
 import crowd_config
 import members
 from PIL import Image
+
 ######
 st.set_page_config(
     page_title=crowd_config.TITLE,

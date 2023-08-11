@@ -89,13 +89,7 @@ imp="Kaggle_deduplicated.csv"
 imp_org="Kaggle_Dataset.csv"
 df=pd.read_csv(imp,index_col='id')
 df.drop(columns='Unnamed: 0',inplace=True)
-df.sub_category.value_counts()
-
-# reverse column names of category variables correctly for data description & exploration
-new={"main_category":"sub_category2",
-"sub_category":"main_category"}
-df.rename(columns=new,inplace=True)
-df.rename(columns={"sub_category2":"sub_category"},inplace=True)
+df.sub_category.nunique()
 
 # Error Handling of pyplot visualisations
 st.set_option('deprecation.showPyplotGlobalUse', False)
@@ -152,7 +146,7 @@ X_train_merge_org=pd.concat([X_train_num,X_train_ohe],axis=1)
 X_test_merge=pd.concat([X_test_num,X_test_ohe],axis=1)
     
 # Resampling
-if over_estimation ==1:
+if over_estimation==1:
     from imblearn.over_sampling import RandomOverSampler 
     rOs=RandomOverSampler()
     X_over,y_over=rOs.fit_resample(X_train_merge_org,y_train)
@@ -208,7 +202,7 @@ if page==pages[1]:
 
     # describe data source (web page)
     url="https://www.kaggle.com/yashkantharia/kickstarter-campaigns-dataset-20"
-    st.markdown(f'''The original dataset was downloaded from the data science network kaggle and may be accessed (as .csv without any cost) <a href={url} target="_blank" title="go download kaggle raw dataset">here</a>. ''',unsafe_allow_html=True)
+    st.markdown(f'''The original dataset was downloaded from the data science network kaggle and may be accessed (as .csv without any cost) <a href={url} target="_blank" title="go download kaggle raw dataset">here</a>.''',unsafe_allow_html=True)
     
     # present original data
     df_dup=pd.read_csv(imp_org)
@@ -258,6 +252,7 @@ if page==pages[1]:
     st.pyplot(countplot)
     
     # general description
+    st.sidebar.write('Description of ...')
     if st.sidebar.checkbox('Numerical Variables'):
         st.write('Summary of numerical variables')
         st.table(df_dup.describe(include=["number"]))
@@ -265,7 +260,7 @@ if page==pages[1]:
         st.write('Summary of categorical variables')
         st.table(df_dup.describe(exclude=["number"]))
         # st.table(df.select_dtypes("object").value_counts())
-
+    st.markdown("##### Creators")
     st.markdown("Another interesting aspect is, that the 'creator_id' neither is unique. That is: there are creators with more than one project run on Kickstarter.")
         
 #################### Preprocsssing I ###########################################################
@@ -335,7 +330,7 @@ if page==pages[3]:
         plt.figure(figsize=(12,12))
         sns.countplot(x=data[X],hue=data.replace([1,0],['successful','failed'])[HUE])
         plt.xlabel(X)
-        plt.xticks(rotation=45)
+        plt.legend(labels=["failed","successful"])
         plt.title(f"Number of projects by years of launch and {HUE}");
     with col2:
         st.pyplot(yearplot(df,"launched_year","status"))

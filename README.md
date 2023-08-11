@@ -1,60 +1,48 @@
-# ProjectTemplate
 
-## Explanations and Instructions
+# Predicting the success of a crowdfunding campaign
 
-This repository contains the files needed to initialize a project for your [DataScientest](https://datascientest.com/) training.
+## Introduction
 
-It contains mainly the present README.md file and an application template [Streamlit](https://streamlit.io/).
+This repository contains the code for our project **"Kickstarter Success Factors"**, developed during our [Data Analyst training](https://datascientest.com/en/data-analyst-course) at [DataScientest](https://datascientest.com/en/).
 
-**README**
+### Objective
 
-The README.md file is a central element of any git repository. It allows you to present your project, its objectives, and to explain how to install and launch the project, or even how to contribute to it.
+The goal of this project is to identify
+- common characteristics of crowdfunding campaigns, and \n 
+- which of those have a positive, and \n 
+- which others a negative relation with a campaign's success.
 
-You will have to modify different sections of this README.md to include the necessary informations.
+### Team members
 
-- Complete the sections (`## Presentation and Installation` `## Streamlit App`) following the instructions in these sections.
-- Delete this section (`## Explanations and Instructions`)
+This project was developed by the following team:
 
-**Streamlit Application**
+- Franz Gerbig ([GitHub](https://github.com/franzgerbig) / [LinkedIn](https://linkedin.com/in/franzgerbig))
+- Hendrik Bosse ([GitHub](https://github.com/hebosse))
 
-A [Streamlit] application template (https://streamlit.io/) is available in the [streamlit_app](streamlit_app) folder. You can use this template to start with your project.
+## Try it
 
-## Presentation and Installation
+### Data Source and preprocessing
+The raw data is available directly [here](./data) (or on the data science platform [kaggle](https://www.kaggle.com/yashkantharia/kickstarter-campaigns-dataset-20) without any cost).
 
-Complete this section with a brief description of your project, the context (including a link to the DataScientest course), and the objectives.
+To preprocess (preprocessing I) and analyze (preprocessing II & modeling) the data, you can run the [notebooks](./notebooks) - be careful with the filepaths. 
 
-You can also add a brief presentation of the team members with links to your respective networks (GitHub and/or LinkedIn for example).
-
-**Example:**
-
-This repository contains the code for our project **PROJECT_NAME**, developed during our [Data Scientist training](https://datascientest.com/en/data-scientist-course) at [DataScientest](https://datascientest.com/).
-
-The goal of this project is to **...**
-
-This project was developed by the following team :
-
-- John Doe ([GitHub](https://github.com/) / [LinkedIn](http://linkedin.com/))
-- Martin Dupont ([GitHub](https://github.com/) / [LinkedIn](http://linkedin.com/))
-
-You can browse and run the [notebooks](./notebooks). 
-
-You will need to install the dependencies (in a dedicated environment) :
+You will need to install (some of) the dependencies (in a dedicated environment):
 
 ```
 pip install -r requirements.txt
 ```
 
-## Streamlit App
+### Streamlit App
 
-**Add explanations on how to use the app.**
+In a more interactive manner you may play around with the [streamlit app](./streamlit).
 
-To run the app (be careful with the paths of the files in the app):
+To run the app, please execute the following code:
 
 ```shell
-conda create --name my-awesome-streamlit python=3.9
-conda activate my-awesome-streamlit
+conda create --name crowdfunding-streamlit python=3.10
+conda activate crowdfunding-streamlit
 pip install -r requirements.txt
-streamlit run app.py
+streamlit run streamlit_crowdfunding_BDA_May23.py
 ```
 
 The app should then be available at [localhost:8501](http://localhost:8501).
